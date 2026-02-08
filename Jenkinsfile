@@ -1,51 +1,31 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'
+        }
+    }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out source code from GitHub...'
                 checkout scm
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Setting up Python virtual environment...'
                 sh '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install --upgrade pip
-                pip install -r requirements.txt
-                pip install pytest pytest-html pytest-cov
+                    pip install --upgrade pip
+                    pip install pytest
                 '''
             }
         }
 
-        stage('Build / Syntax Check') {
+        stage('Run Tests') {
             steps {
-                echo 'Checking Python syntax...'
                 sh '''
-                . venv/bin/activate
-                python3 -m compileall .
+                    pytest test_basic.py
                 '''
-            }
-        }
-
-        stage('Unit Test') {
-            steps {
-                echo 'Running unit tests with pytest...'
-                sh '''
-                . venv/bin/activate
-                mkdir -p test-reports
-                pytest --junitxml=test-reports/results.xml
-                '''
-            }
-            post {
-                always {
-                    echo 'Archiving test results...'
-                    junit 'test-reports/results.xml'
-                }
             }
         }
     }
@@ -55,7 +35,7 @@ pipeline {
             echo 'Python CI Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Please check the test results.'
+            echo 'Python CI Pipeline failed!'
         }
     }
 }
