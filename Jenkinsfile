@@ -1,18 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'
+        }
+    }
 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
-            }
-        }
-
-        stage('Verify Python') {
-            steps {
-                sh '''
-                    python --version || python3 --version
-                '''
             }
         }
 
